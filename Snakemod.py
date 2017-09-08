@@ -22,7 +22,7 @@ from pygame.locals import *
 
 
 ## Impostazioni Generali Manuali
-FPS                  = 20    # velocità di gioco
+FPS                  = 20    # velocita' di gioco
 ALTEZZAFINESTRA      = 600   # altezza   finestra (600 per gioco a livelli)
 LUNGHEZZAFINESTRA    = 1000  # lunghezza finestra (1000 per gioco a livelli)
 DIMENSIONECELLE      = 20    # dimensione celle
@@ -68,10 +68,9 @@ COLOREMURO          = BLU
 COLOREMUROINTERNO   = AZZURRO
 TESTA               = 0
 SU                  = 'Su'
-GIU                 = 'Giù'
+GIU                 = 'Giu'
 SX                  = 'Sinistra'
 DX                  = 'Destra'
-
 
 
 ###############################################################################
@@ -89,7 +88,7 @@ def main():
     OROLOGIO       = pygame.time.Clock()
     AREADIGIOCO    = pygame.display.set_mode((LUNGHEZZAFINESTRA, ALTEZZAFINESTRA))
     CARATTEREBASE  = pygame.font.Font('freesansbold.ttf', 18)
-    
+
 
     ## Avvio Schermata di Inizio e settaggio Titolo
     pygame.display.set_caption('SNAKE!!!')
@@ -129,9 +128,9 @@ def avviaGiocoStandard():
 
     ## Ciclo di Gioco Principale
     while True:
-        
+
         ## Rilevazione Eventi e Cambio Direzione
-        for evento in pygame.event.get(): 
+        for evento in pygame.event.get():
             if evento.type == QUIT:
                 termina()
             elif evento.type == KEYDOWN:
@@ -150,7 +149,7 @@ def avviaGiocoStandard():
         if BORDI:
             if bordoColpito(coordinateVerme):
                 return False
-        
+
         ## Controlla se il Verme si Colpisce
         for coordinataVerme in coordinateVerme[1:]:
             if  coordinataVerme['x'] == coordinateVerme[TESTA]['x']\
@@ -158,22 +157,22 @@ def avviaGiocoStandard():
                 return False
 
         ## Permette di Attraversare i Bordi
-        if not BORDI:    
+        if not BORDI:
             for coordinataVerme in coordinateVerme:
                 coordinateVerme[TESTA]['x']=coordinateVerme[TESTA]['x']%CELLEORIZZONTALI
                 coordinateVerme[TESTA]['y']=coordinateVerme[TESTA]['y']%CELLEVERTICALI
 
 
-        ## Controlla se il Verme Mangia una Mela 
+        ## Controlla se il Verme Mangia una Mela
         if  coordinateVerme[TESTA]['x'] == mela['x']\
         and coordinateVerme[TESTA]['y'] == mela['y']:
-            ## Se sì -> Setta Nuova Mela
-            mela = prendiCasellaCasuale(muri,coordinateVerme) 
+            ## Se si' -> Setta Nuova Mela
+            mela = prendiCasellaCasuale(muri,coordinateVerme)
         else:
             ## Se no -> Toglie Coda
             del coordinateVerme[-1]
 
-            
+
         ## Muove il Verme Aggiungendo una Nuova Testa
         if   direzione == SU:
             nuovaTesta = {'x': coordinateVerme[TESTA]['x'],     'y': coordinateVerme[TESTA]['y'] - 1}
@@ -195,16 +194,16 @@ def avviaGiocoStandard():
         disegnaMela(mela)                             # Mela
         scriviPunteggio(len(coordinateVerme) - 3)     # Punteggio
         scriviTempo(tempo)                            # Tempo
-        scriviGioco()                                 # Modalità di Gioco
+        scriviGioco()                                 # Modalita' di Gioco
 
         ## Aggiornamenti
         pygame.display.update()
         OROLOGIO.tick(FPS)
 
-        
+
 
 ###############################################################################
-# Avviamento del Gioco a Livelli 
+# Avviamento del Gioco a Livelli
 ###############################################################################
 
 
@@ -212,6 +211,12 @@ def avviaGiocoStandard():
 ## Funzione di Gioco A Livelli (Caselle 50*30)
 def avviaGiocoLivelli():
 
+    ## Si sposta nella directory dello script
+    ## Fatto perche' con alcuni sistemi lo script non viene eseguito
+    ## nella sua cartella, quindi il file snakeLivelli.txt non veniva trovato
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir(dname)
 
     ## Apre Legge e Interpreta il File Livelli
     livelli = leggiFileLivelli("snakeLivelli.txt")
@@ -222,7 +227,7 @@ def avviaGiocoLivelli():
     livelloCorrente = 0
     vite = VITE - 1
     tempo = 0
-    
+
 
     ## Avvia i Livelli
     while True:
@@ -230,7 +235,7 @@ def avviaGiocoLivelli():
         risoluzione,tempo = livello(livelloCorrente,vite,tempo,livelli)
         livelliSuperati.append(risoluzione)
 
-        ## Controlla se il Livello è stato Superato
+        ## Controlla se il Livello e' stato Superato
 
         if not False in livelliSuperati:
             if livelloCorrente%5==4:
@@ -243,12 +248,32 @@ def avviaGiocoLivelli():
             elif vite > 0:
                 livelliSuperati.pop()
                 vite = vite-1
-                
+
         ## Controlla se sono finiti i Livelli
         if livelloCorrente >= LABIRINTI:
             return True
-            
 
+def vitaInMeno(lvl, coordinateVerme, mela, labirinto, vite, tempoPrecedente):
+    global COLORECORPOESTERNO, COLORECORPOINTERNO
+    COLORECORPOESTERNO = ROSSO
+    COLORECORPOINTERNO = GIALLO
+
+    ## Istruzioni di Disegno
+    AREADIGIOCO.fill(COLORESFONDO)                              # Sfondo
+    disegnaGriglia()                                            # Griglia
+    disegnaVerme(coordinateVerme)                               # Verme
+    disegnaMela(mela)                                           # Mela
+    disegnaMuri(labirinto)                                      # Muri del Livello
+    punteggioRestante(SUPERAMENTO - len(coordinateVerme) + 3)   # Punteggio
+    scriviLivello(lvl)                                          # Livello Corrente
+    scriviVite(vite)                                            # Vite
+    scriviTempo(tempoPrecedente)                                # Tempo
+
+
+    pygame.display.update()
+    pygame.time.wait(1000)
+    COLORECORPOESTERNO = VERDESCURO
+    COLORECORPOINTERNO = VERDE
 
 ###############################################################################
 # Avviamento dei Singoli Livelli
@@ -275,7 +300,7 @@ def livello(livello,vite,tempoPrecedente,livelli):
 
 
     ## Inizializza il Livello
-    
+
     AREADIGIOCO.fill(COLORESFONDO)                              # Sfondo
     disegnaGriglia()                                            # Griglia
     disegnaVerme(coordinateVerme)                               # Verme
@@ -302,12 +327,12 @@ def livello(livello,vite,tempoPrecedente,livelli):
     ## Inizializza Cronometro
     tempoGioco = 0
     tempoInizio = time.time()
-    
+
     ## Ciclo di Gioco Principale
     while len(coordinateVerme)<SUPERAMENTO+3:
-        
+
         ## Rilevazione Eventi e Cambio Direzione
-        for evento in pygame.event.get(): 
+        for evento in pygame.event.get():
             if evento.type == QUIT:
                 termina()
             elif evento.type == KEYDOWN:
@@ -322,43 +347,46 @@ def livello(livello,vite,tempoPrecedente,livelli):
                 elif evento.key == K_ESCAPE:
                     termina()
 
-        ## Controlla se il Verme si Colpisce
-        for coordinataVerme in coordinateVerme[1:]:
-            if  coordinataVerme['x'] == coordinateVerme[TESTA]['x']\
-            and coordinataVerme['y'] == coordinateVerme[TESTA]['y']:
-                return False, tempoPrecedente+tempoGioco
-
-        ## Permette di Attraversare i Bordi
-        if not BORDI:    
-            for coordinataVerme in coordinateVerme:
-                coordinateVerme[TESTA]['x']=coordinateVerme[TESTA]['x']%CELLEORIZZONTALI
-                coordinateVerme[TESTA]['y']=coordinateVerme[TESTA]['y']%CELLEVERTICALI
-
-        ## Controlla se il Verme Mangia una Mela 
-        if  coordinateVerme[TESTA]['x'] == mela['x']\
-        and coordinateVerme[TESTA]['y'] == mela['y']:
-            ## Se sì -> Setta Nuova Mela
-            mela = prendiCasellaCasuale(muri,coordinateVerme) 
-        else:
-            ## Se no -> Toglie Coda
-            del coordinateVerme[-1]
-
-        ## Controlla se il Verme Colpisce un Muro
-        for muro in labirinto:
-            if  muro['x'] == coordinateVerme[TESTA]['x']\
-            and muro['y'] == coordinateVerme[TESTA]['y']:
-                return False, tempoPrecedente+tempoGioco
-
         ## Muove il Verme Aggiungendo una Nuova Testa
-        if   direzione == SU:
-            nuovaTesta = {'x': coordinateVerme[TESTA]['x'],     'y': coordinateVerme[TESTA]['y'] - 1}
+        if direzione == SU:
+            nuovaTesta = {'x': coordinateVerme[TESTA]['x'], 'y': coordinateVerme[TESTA]['y'] - 1}
         elif direzione == GIU:
-            nuovaTesta = {'x': coordinateVerme[TESTA]['x'],     'y': coordinateVerme[TESTA]['y'] + 1}
+            nuovaTesta = {'x': coordinateVerme[TESTA]['x'], 'y': coordinateVerme[TESTA]['y'] + 1}
         elif direzione == SX:
             nuovaTesta = {'x': coordinateVerme[TESTA]['x'] - 1, 'y': coordinateVerme[TESTA]['y']}
         elif direzione == DX:
             nuovaTesta = {'x': coordinateVerme[TESTA]['x'] + 1, 'y': coordinateVerme[TESTA]['y']}
         coordinateVerme.insert(0, nuovaTesta)
+
+        ## Controlla se il Verme si Colpisce
+        for coordinataVerme in coordinateVerme[1:]:
+            if  coordinataVerme['x'] == coordinateVerme[TESTA]['x']\
+            and coordinataVerme['y'] == coordinateVerme[TESTA]['y']:
+                vitaInMeno(livello, coordinateVerme, mela, labirinto,  vite, tempoPrecedente+tempoGioco)
+                return False, tempoPrecedente+tempoGioco
+
+        ## Controlla se il Verme Colpisce un Muro
+        for muro in labirinto:
+            if muro['x'] == coordinateVerme[TESTA]['x'] \
+            and muro['y'] == coordinateVerme[TESTA]['y']:
+                vitaInMeno(livello, coordinateVerme, mela, labirinto, vite, tempoPrecedente + tempoGioco)
+                return False, tempoPrecedente + tempoGioco
+
+        ## Permette di Attraversare i Bordi
+        if not BORDI:
+            for coordinataVerme in coordinateVerme:
+                coordinateVerme[TESTA]['x']=coordinateVerme[TESTA]['x']%CELLEORIZZONTALI
+                coordinateVerme[TESTA]['y']=coordinateVerme[TESTA]['y']%CELLEVERTICALI
+
+
+        ## Controlla se il Verme Mangia una Mela
+        if  coordinateVerme[TESTA]['x'] == mela['x']\
+        and coordinateVerme[TESTA]['y'] == mela['y']:
+            ## Se si' -> Setta Nuova Mela
+            mela = prendiCasellaCasuale(muri,coordinateVerme)
+        else:
+            ## Se no -> Toglie Coda
+            del coordinateVerme[-1]
 
         ## Istruzioni Cronometro
         tempoGioco = time.time()-tempoInizio
@@ -378,7 +406,7 @@ def livello(livello,vite,tempoPrecedente,livelli):
         pygame.display.update()
         OROLOGIO.tick(FPS)
 
-    ## Controlla se il Livello è stato Superato
+    ## Controlla se il Livello e' stato Superato
     if   len(coordinateVerme)<=SUPERAMENTO+2:
         return False, tempoPrecedente+tempoGioco
     else:
@@ -565,7 +593,7 @@ def scriviVite(punteggio):
 
 
 
-## Mostra ila Modalità di Gioco
+## Mostra la Modalita' di Gioco
 def scriviGioco():
     if BORDI:
         areaPunteggio = CARATTEREBASE.render('Bordi On', True, COLOREPUNTEGGIO)
@@ -697,7 +725,7 @@ def disegnaGriglia():
 def leggiFileLivelli(nomeFile):
 
     # Controlla l'Esistenza del File e lo Apre
-    assert os.path.exists(nomeFile), 'Non è Stato trovato il File: %s' % (nomeFile)
+    assert os.path.exists(nomeFile), 'Non e\' Stato trovato il File: %s' % (nomeFile)
     fileMappe = open(nomeFile, 'r')
     # Legge una Linea alla Volta e le Separa e Chiude il File
     contenutoFile = fileMappe.readlines() + ['\r\n']
@@ -732,7 +760,7 @@ def leggiFileLivelli(nomeFile):
         elif linea == '' and len(lineeMappa) > 0:
             
 
-            # Trova La Line più Lunga
+            # Trova La Line piu' Lunga
             lunghezzaMassima = -1
             for i in range(len(lineeMappa)):
                 if len(lineeMappa[i]) > lunghezzaMassima:
@@ -763,16 +791,16 @@ def leggiFileLivelli(nomeFile):
             for x in range(lunghezzaMassima):
                 for y in range(len(oggettiMappa[x])):
 
-                    # '@' è la Testa del serpente
+                    # '@' e' la Testa del serpente
                     if oggettiMappa[x][y] in ('@'):
                         xInizio = x-1
                         yInizio = y-1
 
-                    # '$' è un Muro    
+                    # '$' e' un Muro    
                     if oggettiMappa[x][y] in ('$'):
                         muri.append([x-1, y-1])
 
-                    # '$' è un Muro, "%" è un Punto di No Spawn
+                    # '$' e' un Muro, "%" e' un Punto di No Spawn
                     if oggettiMappa[x][y] in ('$', '%'):
                         noSpawn.append([x-1, y-1])
 
